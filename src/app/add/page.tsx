@@ -10,6 +10,10 @@ import CameraInput from '@/components/CameraInput';
 export default function AddPage() {
   const router = useRouter();
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [time, setTime] = useState(() => {
+    const now = new Date();
+    return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+  });
   const [menuName, setMenuName] = useState('');
   const [photo, setPhoto] = useState<Blob | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string>('');
@@ -49,6 +53,7 @@ export default function AddPage() {
       const entry: FoodEntry = {
         id: crypto.randomUUID(),
         date,
+        time,
         menuName: menuName.trim(),
         photo: photo || undefined,
         createdAt: Date.now(),
@@ -90,6 +95,21 @@ export default function AddPage() {
                 id="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                required
+              />
+            </div>
+
+            {/* 時間 */}
+            <div>
+              <label htmlFor="time" className="block text-sm font-medium text-gray-700 mb-2">
+                🕐 時間
+              </label>
+              <input
+                type="time"
+                id="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 required
               />
