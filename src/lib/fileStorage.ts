@@ -1,4 +1,4 @@
-import { FoodEntry } from '@/types/food';
+import { FoodEntry, MealType } from '@/types/food';
 
 const FILE_NAME = 'foodiary-data.json';
 const HANDLE_STORE_NAME = 'file-handles';
@@ -120,11 +120,17 @@ const entryToSerializable = async (entry: FoodEntry): Promise<Record<string, unk
 // Base64 を Blob に戻す
 const serializableToEntry = async (data: Record<string, unknown>): Promise<FoodEntry> => {
   const { _photoIsBase64, ...rest } = data;
+
+  // 旧形式（menuName）からの移行対応
+  const mealType = (rest.mealType as MealType) || '昼食';
+  const menu = (rest.menu as string | undefined) || (rest.menuName as string | undefined);
+
   const entry: FoodEntry = {
     id: rest.id as string,
     date: rest.date as string,
     time: rest.time as string | undefined,
-    menuName: rest.menuName as string,
+    mealType,
+    menu,
     photo: rest.photo as Blob | undefined,
     createdAt: rest.createdAt as number,
   };

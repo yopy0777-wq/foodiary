@@ -35,15 +35,22 @@ export default function FoodCard({ entry, onDelete }: FoodCardProps) {
         <div className="w-full h-64 bg-gray-100">
           <img
             src={photoURL}
-            alt={entry.menuName}
+            alt={entry.mealType}
             className="w-full h-full object-cover"
           />
         </div>
       )}
-      
+
       <div className="p-6">
         <div className="flex justify-between items-start mb-2">
-          <h2 className="text-2xl font-bold text-gray-800">{entry.menuName}</h2>
+          <div>
+            <span className="inline-block bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded-full mb-2">
+              {entry.mealType}
+            </span>
+            {entry.menu && (
+              <h2 className="text-xl font-bold text-gray-800">{entry.menu}</h2>
+            )}
+          </div>
           <button
             onClick={() => onDelete(entry.id)}
             className="text-red-500 hover:text-red-700 transition p-2 hover:bg-red-50 rounded-lg"

@@ -4,8 +4,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { addEntry, compressImage } from '@/lib/db';
-import { FoodEntry } from '@/types/food';
+import { FoodEntry, MealType } from '@/types/food';
 import CameraInput from '@/components/CameraInput';
+
+const MEAL_TYPES: MealType[] = ['朝食', '昼食', '夕食', '夜食', '間食'];
 
 export default function AddPage() {
   const router = useRouter();
@@ -14,7 +16,8 @@ export default function AddPage() {
     const now = new Date();
     return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
   });
-  const [menuName, setMenuName] = useState('');
+  const [mealType, setMealType] = useState<MealType>('昼食');
+  const [menu, setMenu] = useState('');
   const [photo, setPhoto] = useState<Blob | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string>('');
   const [loading, setLoading] = useState(false);
@@ -42,11 +45,6 @@ export default function AddPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!menuName.trim()) {
-      alert('メニュー名を入力してください');
-      return;
-    }
-
     setLoading(true);
 
     try {
@@ -54,7 +52,8 @@ export default function AddPage() {
         id: crypto.randomUUID(),
         date,
         time,
-        menuName: menuName.trim(),
+        mealType,
+        menu: menu.trim() || undefined,
         photo: photo || undefined,
         createdAt: Date.now(),
       };
@@ -85,49 +84,71 @@ export default function AddPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="bg-white rounded-2xl shadow-lg p-6 space-y-6">
-            {/* 日付 */}
-            <div>
-              <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
-                📅 日付
-              </label>
-              <input
-                type="date"
-                id="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                required
-              />
+            {/* 日付と時間 */}
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
+                  📅 日付
+                </label>
+                <input
+                  type="date"
+                  id="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  required
+                />
+              </div>
+              <div className="flex-1">
+                <label htmlFor="time" className="block text-sm font-medium text-gray-700 mb-2">
+                  🕐 時間
+                </label>
+                <input
+                  type="time"
+                  id="time"
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  required
+                />
+              </div>
             </div>
 
-            {/* 時間 */}
+            {/* 食事種別 */}
             <div>
-              <label htmlFor="time" className="block text-sm font-medium text-gray-700 mb-2">
-                🕐 時間
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                🍽️ 食事種別
               </label>
-              <input
-                type="time"
-                id="time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                required
-              />
+              <div className="flex flex-wrap gap-2">
+                {MEAL_TYPES.map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setMealType(type)}
+                    className={`px-4 py-2 rounded-full font-medium transition ${
+                      mealType === type
+                        ? 'bg-green-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* メニュー名 */}
+            {/* 献立 */}
             <div>
-              <label htmlFor="menuName" className="block text-sm font-medium text-gray-700 mb-2">
-                🍴 メニュー名
+              <label htmlFor="menu" className="block text-sm font-medium text-gray-700 mb-2">
+                📝 献立（任意）
               </label>
               <input
                 type="text"
-                id="menuName"
-                value={menuName}
-                onChange={(e) => setMenuName(e.target.value)}
-                placeholder="例: ハンバーグ定食"
+                id="menu"
+                value={menu}
+                onChange={(e) => setMenu(e.target.value)}
+                placeholder="例: ハンバーグ、サラダ、味噌汁"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                required
               />
             </div>
 
