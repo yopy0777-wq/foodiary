@@ -1,7 +1,11 @@
 {
   "/_not-found": "app/_not-found.js",
-  "/add/page": "app/add/page.js",
+  "/auth/callback/route": "app/auth/callback/route.js",
   "/page": "app/page.js",
   "/icon.svg/route": "app/icon.svg/route.js",
+  "/edit/[id]/page": "app/edit/[id]/page.js",
+  "/auth/login/page": "app/auth/login/page.js",
+  "/add/page": "app/add/page.js",
+  "/auth/signup/page": "app/auth/signup/page.js",
   "/settings/page": "app/settings/page.js"
 }
