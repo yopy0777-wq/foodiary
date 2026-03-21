@@ -12,7 +12,8 @@ import { useRouter } from 'next/navigation';
 // Next.js の Link コンポーネント
 import Link from 'next/link';
 // データベース操作関数をインポート
-import { addEntry, compressImage } from '@/lib/db';
+import { addEntry } from '@/lib/db';
+import { compressImage } from '@/lib/imageUtils';
 // 型定義をインポート
 import { FoodEntry, MealType } from '@/types/food';
 // カメラ入力コンポーネントをインポート

@@ -25,6 +25,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 // プラン関連のユーティリティをインポート
 import { canUseLocalSync, getPlanLabel, getPlanDescription } from '@/lib/plan';
+import { getStorageUsage, formatBytes, cleanupOldPhotos, isIOS, StorageUsage } from '@/lib/storageManager';
 
 /**
  * プランタイプごとのスタイル定義
@@ -51,6 +52,12 @@ export default function SettingsPage() {
   const [syncing, setSyncing] = useState(false);
   // 通知メッセージ
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  // ストレージ使用量
+  const [storageUsage, setStorageUsage] = useState<StorageUsage | null>(null);
+  // iOS デバイス判定
+  const [isIOSDevice, setIsIOSDevice] = useState(false);
+  // 写真クリーンアップ中フラグ
+  const [cleaningPhotos, setCleaningPhotos] = useState(false);
   // ファイル選択用の input 要素への参照
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -72,6 +79,10 @@ export default function SettingsPage() {
         const stored = await hasStoredDirectory();
         setHasDirectory(stored);
       }
+
+      setIsIOSDevice(isIOS());
+      const usage = await getStorageUsage();
+      setStorageUsage(usage);
 
       setLoading(false);
     };
@@ -204,6 +215,24 @@ export default function SettingsPage() {
     } finally {
       // ファイル入力をリセット（同じファイルを再選択可能に）
       e.target.value = '';
+    }
+  };
+
+  /**
+   * 古い写真を削除してストレージを解放するハンドラー
+   */
+  const handleCleanupPhotos = async () => {
+    if (!confirm('直近30件より古い食事記録の写真を削除してストレージを解放しますか？\n（記録自体は削除されません）')) return;
+    setCleaningPhotos(true);
+    try {
+      const count = await cleanupOldPhotos(30);
+      const usage = await getStorageUsage();
+      setStorageUsage(usage);
+      showMessage('success', count > 0 ? `${count}件の写真を削除してストレージを解放しました` : '削除できる写真はありませんでした');
+    } catch {
+      showMessage('error', '写真の削除に失敗しました');
+    } finally {
+      setCleaningPhotos(false);
     }
   };
 
@@ -347,9 +376,15 @@ export default function SettingsPage() {
             ) : !isSupported ? (
               /* ブラウザが未対応の場合 */
               <div className="text-gray-600">
-                <p className="mb-2">このブラウザは自動保存に対応していません。</p>
+                <p className="mb-2">
+                  {isIOSDevice
+                    ? 'iPhoneでは自動保存フォルダの選択はご利用いただけません。'
+                    : 'このブラウザは自動保存に対応していません。'}
+                </p>
                 <p className="text-sm text-gray-500">
-                  Chrome または Edge を使用すると、ローカルフォルダへの自動保存が利用できます。
+                  {isIOSDevice
+                    ? '下の「手動バックアップ」からJSONファイルにエクスポートしてデータを保存してください。'
+                    : 'Chrome または Edge を使用すると、ローカルフォルダへの自動保存が利用できます。'}
                 </p>
               </div>
             ) : hasDirectory ? (
@@ -403,6 +438,46 @@ export default function SettingsPage() {
               </div>
             )}
           </section>
+
+          {/* ストレージ使用量セクション（未ログイン時のみ） */}
+          {!isAuthenticated && storageUsage && (
+            <section className="bg-white rounded-2xl shadow-lg p-6">
+              <h2 className="text-xl font-bold text-gray-800 mb-4">ストレージ使用量</h2>
+              <p className="text-sm text-gray-600 mb-4">
+                ブラウザのストレージ（IndexedDB）の使用状況です。写真データが多いと容量を圧迫します。
+              </p>
+              {storageUsage.quota > 0 ? (
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">使用中: {formatBytes(storageUsage.used)}</span>
+                    <span className="text-gray-600">上限: {formatBytes(storageUsage.quota)}</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div
+                      className={`h-3 rounded-full transition-all ${
+                        storageUsage.percentage >= 80 ? 'bg-red-500' :
+                        storageUsage.percentage >= 50 ? 'bg-yellow-500' : 'bg-green-500'
+                      }`}
+                      style={{ width: `${Math.min(storageUsage.percentage, 100)}%` }}
+                    />
+                  </div>
+                  <p className={`text-sm font-medium ${storageUsage.percentage >= 80 ? 'text-red-600' : 'text-gray-600'}`}>
+                    {storageUsage.percentage}% 使用中
+                    {storageUsage.percentage >= 80 && ' ⚠️ ストレージが残り少なくなっています'}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">使用量: {formatBytes(storageUsage.used)}</p>
+              )}
+              <button
+                onClick={handleCleanupPhotos}
+                disabled={cleaningPhotos}
+                className="mt-4 px-4 py-2 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 text-white rounded-lg transition text-sm"
+              >
+                {cleaningPhotos ? '削除中...' : '古い写真を削除してストレージ解放'}
+              </button>
+            </section>
+          )}
 
           {/* 手動バックアップセクション */}
           <section className="bg-white rounded-2xl shadow-lg p-6">

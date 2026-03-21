@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { getEntry, updateEntry, compressImage } from '@/lib/db';
+import { getEntry, updateEntry } from '@/lib/db';
+import { compressImage } from '@/lib/imageUtils';
 import { FoodEntry, MealType } from '@/types/food';
 import CameraInput from '@/components/CameraInput';
 import { useAuth } from '@/contexts/AuthContext';
