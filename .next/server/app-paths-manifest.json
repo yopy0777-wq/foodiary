@@ -1,12 +1,12 @@
 {
   "/_not-found": "app/_not-found.js",
+  "/add/page": "app/add/page.js",
   "/auth/callback/route": "app/auth/callback/route.js",
-  "/auth/login/page": "app/auth/login/page.js",
   "/auth/signup/page": "app/auth/signup/page.js",
-  "/auth/update-password/page": "app/auth/update-password/page.js",
-  "/edit/[id]/page": "app/edit/[id]/page.js",
+  "/auth/login/page": "app/auth/login/page.js",
   "/page": "app/page.js",
-  "/settings/page": "app/settings/page.js",
+  "/auth/update-password/page": "app/auth/update-password/page.js",
   "/auth/reset-password/page": "app/auth/reset-password/page.js",
-  "/add/page": "app/add/page.js"
+  "/settings/page": "app/settings/page.js",
+  "/edit/[id]/page": "app/edit/[id]/page.js"
 }

@@ -97,7 +97,8 @@ export default function EditPage() {
       router.push('/');
     } catch (error) {
       console.error('更新に失敗しました:', error);
-      alert('更新に失敗しました');
+      const message = error instanceof Error ? error.message : '更新に失敗しました';
+      alert(message);
       setLoading(false);
     }
   };

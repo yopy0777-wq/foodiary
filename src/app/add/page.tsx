@@ -106,7 +106,8 @@ export default function AddPage() {
       router.push('/');
     } catch (error) {
       console.error('保存に失敗しました:', error);
-      alert('保存に失敗しました');
+      const message = error instanceof Error ? error.message : '保存に失敗しました';
+      alert(message);
       setLoading(false);
     }
   };

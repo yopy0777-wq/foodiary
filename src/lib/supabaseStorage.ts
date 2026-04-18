@@ -26,19 +26,29 @@ export const uploadPhoto = async (
   // ファイルパス: {userId}/{entryId}.jpg
   const filePath = `${userId}/${entryId}.jpg`;
 
-  const { error } = await supabase.storage
+  const uploadPromise = supabase.storage
     .from(BUCKET_NAME)
     .upload(filePath, photo, {
       contentType: 'image/jpeg',
       upsert: true,  // 既存ファイルがあれば上書き
     });
 
-  if (error) {
-    console.error('写真アップロードエラー:', error);
-    return null;
-  }
+  // 30秒でタイムアウト
+  const timeoutPromise = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error('写真のアップロードがタイムアウトしました')), 30000)
+  );
 
-  return filePath;
+  try {
+    const { error } = await Promise.race([uploadPromise, timeoutPromise]);
+    if (error) {
+      console.error('写真アップロードエラー:', error);
+      throw error;
+    }
+    return filePath;
+  } catch (e) {
+    console.error('写真アップロードエラー:', e);
+    throw e;
+  }
 };
 
 /**
