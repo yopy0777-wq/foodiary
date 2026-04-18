@@ -1,321 +1,234 @@
-# 🍽️ 食事記録PWAアプリ
+# foodiary - 食事記録 PWA
 
-シンプルで使いやすい食事記録アプリです。日付、メニュー名、写真を記録できます。
+スマートフォン対応の食事記録アプリ。写真付きで食事を記録し、ブラウザのIndexedDBまたはSupabaseに保存します。
 
-## ✨ 特徴
+---
 
-- 📱 **PWA対応** - ホーム画面に追加してアプリとして使用可能
-- 💾 **完全ローカル保存** - データはすべてブラウザのIndexedDBに保存（サーバー不要）
-- 📷 **写真撮影＆圧縮** - カメラで撮影した写真を自動で圧縮して保存
-- 🔒 **プライバシー重視** - データは外部に送信されません
-- ⚡ **高速動作** - オフラインでも完全動作
-- 📱 **レスポンシブデザイン** - スマホ・タブレット・PC対応
+## 技術スタック
 
-## 🚀 セットアップ
+| 項目 | 技術 |
+|------|------|
+| フレームワーク | Next.js 14 (App Router) |
+| 言語 | TypeScript |
+| スタイリング | Tailwind CSS |
+| ローカルDB | IndexedDB（idbライブラリ） |
+| クラウドDB | Supabase（PostgreSQL + Storage） |
+| PWA | Service Worker（`public/sw.js`） |
 
-### 1. 依存関係のインストール
+---
+
+## ディレクトリ構成
+
+```
+src/
+├── app/
+│   ├── page.tsx              # ホーム（食事一覧）
+│   ├── add/page.tsx          # 食事追加フォーム
+│   ├── edit/[id]/page.tsx    # 食事編集フォーム
+│   ├── settings/page.tsx     # 設定ページ
+│   └── auth/
+│       ├── login/page.tsx    # ログイン
+│       ├── signup/page.tsx   # 新規登録
+│       └── callback/route.ts # OAuth コールバック
+├── components/
+│   ├── FoodCard.tsx          # 食事カード表示
+│   ├── CameraInput.tsx       # カメラ/写真入力
+│   ├── AddButton.tsx         # フローティング追加ボタン
+│   └── UserMenu.tsx          # ユーザーメニュー
+├── contexts/
+│   └── AuthContext.tsx       # 認証状態管理
+├── lib/
+│   ├── db.ts                 # IndexedDB/Supabase ハイブリッドCRUD
+│   ├── imageUtils.ts         # 画像圧縮ユーティリティ
+│   ├── storageManager.ts     # ストレージ使用量管理・写真クリーンアップ
+│   ├── fileStorage.ts        # File System Access API（フォルダ同期）
+│   ├── supabase.ts           # Supabase クライアント
+│   ├── supabaseStorage.ts    # Supabase Storage 操作
+│   └── plan.ts               # プラン別機能制御
+├── types/
+│   ├── food.ts               # 食事データ型定義
+│   ├── user.ts               # ユーザー・プラン型定義
+│   └── file-system.d.ts      # File System Access API 型拡張
+└── lib/__tests__/
+    ├── imageUtils.test.ts    # 画像圧縮テスト
+    └── storageManager.test.ts # ストレージ管理テスト
+public/
+├── sw.js                     # Service Worker
+└── manifest.json             # PWA マニフェスト
+```
+
+---
+
+## 会員プランと機能
+
+| 機能 | フリープラン | 無料会員 | プレミアム |
+|------|:---:|:---:|:---:|
+| 食事記録（IndexedDB保存） | ○ | ○ | ○ |
+| 手動バックアップ（JSONエクスポート/インポート） | ○ | ○ | ○ |
+| ローカルフォルダ自動保存（File System Access API） | - | ○ | ○ |
+| クラウド保存（Supabase） | - | - | ○ |
+
+> **注意:** ローカルフォルダ自動保存は Chrome / Edge のみ対応。iOS Safari は非対応。
+
+---
+
+## データ保存の仕組み
+
+### 未ログイン（フリープラン）
+
+```
+食事記録 → IndexedDB（ブラウザ内）
+写真     → Blob として IndexedDB に保存
+```
+
+- ブラウザのストレージを使用するため、写真が多いとデバイス容量を圧迫する
+- 設定ページの「古い写真を削除」でストレージを解放可能
+
+### 無料会員（ログイン済み）
+
+```
+食事記録 → IndexedDB（ブラウザ内）+ ローカルフォルダ自動同期（Chrome/Edge のみ）
+```
+
+### プレミアム会員
+
+```
+食事記録 → Supabase PostgreSQL
+写真     → Supabase Storage（food-photos バケット）
+```
+
+---
+
+## iPhoneのストレージ問題について
+
+### 問題
+
+iOS Safari は File System Access API（`showDirectoryPicker`）に非対応のため、Android のように保存フォルダを選択できない。写真付きの記録が増えると IndexedDB の容量が肥大化し、デバイスストレージを圧迫する。
+
+### 対策
+
+1. **ストレージ使用量の可視化**
+   - 設定ページで `navigator.storage.estimate()` による使用量をプログレスバー表示
+   - 使用率80%超で赤色警告を表示
+
+2. **古い写真の一括削除**
+   - 設定ページの「古い写真を削除してストレージ解放」ボタン
+   - 直近30件のエントリーの写真を残し、それより古い写真 Blob を削除（テキストデータは保持）
+
+3. **iPhone向けUIメッセージ**
+   - `isIOS()` 判定でiPhoneユーザーへの専用メッセージを表示
+   - フォルダ選択不可の旨を明示し、手動バックアップへ誘導
+
+4. **手動バックアップ（全ブラウザ対応）**
+   - JSON ファイルとしてエクスポート/インポート
+   - iPhone ユーザーはこちらを主な永続化手段として使用
+
+---
+
+## 主要ライブラリの API
+
+### `src/lib/imageUtils.ts`
+
+画像圧縮ユーティリティ。
+
+```ts
+compressImage(file: File, maxWidth?: number, maxHeight?: number, quality?: number): Promise<Blob>
+// デフォルト: 800x800px、JPEG品質 0.8
+// Canvas API を使用してリサイズ・圧縮
+```
+
+### `src/lib/storageManager.ts`
+
+ストレージ管理。iPhone のストレージ問題に対処するために追加。
+
+```ts
+getStorageUsage(): Promise<StorageUsage>              // ブラウザのストレージ使用量取得
+formatBytes(bytes: number): string                    // "1.5 MB" 形式に変換
+cleanupOldPhotos(keepCount?: number): Promise<number> // 古い写真削除（デフォルト直近30件保持）
+isIOS(): boolean                                      // iPhone/iPad 判定
+```
+
+### `src/lib/db.ts`
+
+認証状態に応じて保存先を自動切替するCRUDモジュール。
+
+- 未ログイン → IndexedDB
+- ログイン済み（プレミアム）→ Supabase
+
+### `src/lib/fileStorage.ts`
+
+File System Access API を使ったローカルフォルダ同期（Chrome/Edge のみ）。
+
+```ts
+selectDirectory(): Promise<FileSystemDirectoryHandle | null>  // フォルダ選択ダイアログ
+saveToFile(entries: FoodEntry[]): Promise<boolean>            // JSON形式でファイルに書き込み
+loadFromFile(): Promise<FoodEntry[] | null>                   // ファイルから読み込み
+exportToDownload(entries: FoodEntry[]): Promise<void>         // ブラウザダウンロード
+importFromFile(file: File): Promise<FoodEntry[]>              // ファイルからインポート
+```
+
+---
+
+## セットアップ
+
+### 1. 依存パッケージのインストール
 
 ```bash
 npm install
-# または
-yarn install
-# または
-pnpm install
 ```
 
-### 2. 開発サーバーの起動
+### 2. 環境変数の設定
+
+`.env.local` を作成:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+### 3. 開発サーバー起動
 
 ```bash
 npm run dev
-# または
-yarn dev
-# または
-pnpm dev
 ```
 
-ブラウザで [http://localhost:3000](http://localhost:3000) を開いてください。
+---
 
-### 3. ビルド（本番環境用）
+## テスト
+
+テストランナーは現在未導入。以下でインストール可能:
 
 ```bash
-npm run build
-npm run start
+npm install --save-dev jest @types/jest ts-jest
 ```
 
-## 📦 Vercelへのデプロイ
+テストファイル:
 
-### GitHubとVercelの連携
-
-1. このプロジェクトをGitHubリポジトリにプッシュ
-
-```bash
-git init
-git add .
-git commit -m "Initial commit"
-git branch -M main
-git remote add origin <あなたのリポジトリURL>
-git push -u origin main
-```
-
-2. [Vercel](https://vercel.com)にアクセスしてGitHubアカウントでログイン
-
-3. 「New Project」をクリック
-
-4. GitHubリポジトリをインポート
-
-5. プロジェクト設定はデフォルトのままで「Deploy」をクリック
-
-### 環境変数（不要）
-
-このアプリは完全にクライアントサイドで動作するため、環境変数の設定は不要です。
-
-## 📱 PWAインストール方法
-
-### iOS (Safari)
-1. Safariでアプリを開く
-2. 共有ボタン（四角に上矢印）をタップ
-3. 「ホーム画面に追加」を選択
-
-### Android (Chrome)
-1. Chromeでアプリを開く
-2. メニュー（三点リーダー）をタップ
-3. 「ホーム画面に追加」を選択
-
-### PC (Chrome/Edge)
-1. アドレスバー右側のインストールアイコンをクリック
-2. 「インストール」をクリック
-
-## 📋 機能仕様
-
-### 画面構成
-
-| 画面 | パス | 機能 |
-|------|------|------|
-| ホーム画面 | `/` | 記録一覧表示、削除、設定・追加画面へのナビゲーション |
-| 新規記録画面 | `/add` | 食事記録の入力・保存 |
-| 設定画面 | `/settings` | 自動保存設定、バックアップ管理 |
-
-### データ構造
-
-```typescript
-// 食事種別
-type MealType = '朝食' | '昼食' | '夕食' | '夜食' | '間食';
-
-// 食事記録
-interface FoodEntry {
-  id: string;        // UUID形式の一意ID
-  date: string;      // YYYY-MM-DD形式
-  time?: string;     // HH:mm形式（オプション）
-  mealType: MealType;// 食事種別
-  menu?: string;     // 献立（オプション）
-  photo?: Blob;      // 写真データ（オプション）
-  createdAt: number; // 作成時刻（ミリ秒）
-}
-```
-
-### 主要機能
-
-#### 1. 食事記録機能
-- **日付・時間入力**: 現在日時を初期値として設定
-- **食事種別選択**: 5種類（朝食/昼食/夕食/夜食/間食）から選択
-- **献立入力**: テキスト入力（オプション）
-- **写真撮影・選択**: カメラ撮影またはギャラリーから選択可能
-- **自動圧縮**: 写真を撮影したままの大きさで、品質0.5で自動圧縮
-
-#### 2. データ管理機能
-- **IndexedDB保存**: ブラウザ内に永続保存
-- **自動同期**: File System Access APIでローカルフォルダに自動保存（Chrome/Edge）
-- **手動バックアップ**: JSONファイルのエクスポート/インポート
-
-#### 3. 表示機能
-- **カード形式表示**: 写真・食事種別・献立・日時を表示
-- **日付順ソート**: 新しい記録から順に表示
-- **編集機能**:個別記録の日付や献立写真の編集
-- **削除機能**: 個別記録の削除
+| ファイル | 内容 |
+|---------|------|
+| `src/lib/__tests__/imageUtils.test.ts` | `compressImage` のユニットテスト（Canvas/Image/FileReader モック） |
+| `src/lib/__tests__/storageManager.test.ts` | `formatBytes` / `isIOS` / `getStorageUsage` / `cleanupOldPhotos` のユニットテスト |
 
 ---
 
-## 📝 要件定義
+## リファクタリング履歴（2026-03-21）
 
-### 機能要件
+### 変更の背景
 
-| ID | 要件 | 優先度 |
-|----|------|--------|
-| FR-01 | 食事記録（日付、時間、種別、献立、写真）を追加できる | 必須 |
-| FR-02 | 記録一覧を日付順で表示できる | 必須 |
-| FR-03 | 記録を個別に編集することができる | 必須 |
-| FR-04 | 記録を個別に削除できる | 必須 |
-| FR-05 | 写真を撮影またはギャラリーから選択できる | 必須 |
-| FR-06 | 写真を自動圧縮して保存できる | 必須 |
-| FR-07 | データをIndexedDBに保存できる | 必須 |
-| FR-08 | ローカルフォルダに自動同期できる（対応ブラウザ） | 推奨 |
-| FR-09 | JSONファイルでエクスポート/インポートできる | 推奨 |
-| FR-10 | PWAとしてインストールできる | 推奨 |
-| FR-11 | オフラインで動作できる | 推奨 |
+- 未ログインユーザーの写真 Blob が IndexedDB に無制限に蓄積し、特に iPhone でストレージを圧迫
+- iPhone は File System Access API 非対応のためフォルダ選択によるバックアップが不可能
+- `compressImage` が `db.ts` に混在しており、関心の分離が不十分
 
-### 非機能要件
+### 変更ファイル一覧
 
-| ID | 要件 | 詳細 |
-|----|------|------|
-| NFR-01 | レスポンシブ対応 | スマホ・タブレット・PC対応 |
-| NFR-02 | プライバシー | データは外部送信しない |
-| NFR-03 | パフォーマンス | 画像圧縮で容量削減 |
-| NFR-04 | ブラウザ互換性 | 主要ブラウザで動作 |
-| NFR-05 | PWA対応 | ホーム画面追加可能 |
-
----
-
-## 🔄 動作フロー
-
-### 食事記録追加フロー
-
-```
-ホーム画面（/）
-    ↓ [+ボタン]
-新規記録画面（/add）
-    ↓ [フォーム入力]
-    ├─ 日付選択（デフォルト: 今日）
-    ├─ 時間選択（デフォルト: 現在時刻）
-    ├─ 食事種別選択
-    ├─ 献立入力（任意）
-    └─ 写真追加（任意）
-        ↓ [保存]
-    ├─ 画像圧縮処理
-    ├─ IndexedDBに保存
-    └─ ローカルフォルダに同期（設定時）
-        ↓
-ホーム画面（/）に遷移
-```
-
-### バックアップフロー
-
-```
-設定画面（/settings）
-
-【自動保存（Chrome/Edge）】
-フォルダ選択 → ハンドル保存 → 以後の操作で自動同期
-
-【手動エクスポート】
-データ取得 → Base64変換 → JSONダウンロード
-
-【手動インポート】
-ファイル選択 → JSON解析 → データ復元
-```
-
----
-
-## 🛠️ 技術スタック
-
-- **フレームワーク**: Next.js 14 (App Router)
-- **言語**: TypeScript
-- **スタイリング**: Tailwind CSS
-- **データベース**: IndexedDB (idb ライブラリ使用)
-- **PWA**: Service Worker + Web Manifest
-
-## 📁 プロジェクト構造
-
-```
-food-diary-pwa/
-├── public/
-│   ├── manifest.json          # PWA設定
-│   └── sw.js                  # Service Worker
-├── src/
-│   ├── app/
-│   │   ├── page.tsx          # ホーム画面（記録一覧）
-│   │   ├── add/page.tsx      # 記録追加画面
-│   │   ├── layout.tsx        # レイアウト
-│   │   └── globals.css       # グローバルスタイル
-│   ├── components/
-│   │   ├── FoodCard.tsx      # 記録カード
-│   │   ├── AddButton.tsx     # 追加ボタン
-│   │   └── CameraInput.tsx   # カメラ入力
-│   ├── lib/
-│   │   └── db.ts             # IndexedDB操作
-│   └── types/
-│       └── food.ts           # 型定義
-└── package.json
-```
-
-## 🔧 カスタマイズ
-
-### アイコンの変更
-
-`public/` フォルダに以下のファイルを配置してください：
-- `icon-192.png` (192x192px)
-- `icon-512.png` (512x512px)
-- `favicon.ico`
-
-### テーマカラーの変更
-
-`public/manifest.json` の `theme_color` を変更してください。
-
-### 画像圧縮設定の変更
-
-`src/lib/db.ts` の `compressImage` 関数のパラメータを調整してください：
-- `maxWidth`: 最大幅（デフォルト: 800px）
-- `maxHeight`: 最大高さ（デフォルト: 800px）
-- `quality`: JPEG品質（0.0-1.0、デフォルト: 0.8）
-
-## 📝 ライセンス
-
-MIT License
-
-## 🤝 貢献
-
-プルリクエストを歓迎します！大きな変更の場合は、まずissueを開いて変更内容を議論してください。
-
-## ⚠️ 注意事項
-
-- ブラウザのキャッシュをクリアするとデータが失われる可能性があります
-- 大量の写真を保存すると、ブラウザのストレージ容量を消費します
-- バックアップ機能は現在実装されていません（将来的に追加予定）
-
-## 💼 運用プラン・会員制度
-
-### プラットフォーム別の制約
-
-| プラットフォーム | File System Access API | データ永続性 |
-|------------------|------------------------|--------------|
-| iPhone (Safari) | ❌ 非対応 | PWA内のみ（ブラウザ依存） |
-| Android (Chrome) | ✅ 対応 | ローカルフォルダ保存可能 |
-| PC (Chrome/Edge) | ✅ 対応 | ローカルフォルダ保存可能 |
-
-### 会員プラン構成
-
-| プラン | 対象 | 料金 | 機能 |
-|--------|------|------|------|
-| **フリープラン** | 全員 | 無料 | PWA保存（IndexedDB）、手動バックアップ |
-| **無料会員** | Android/PC | 無料（要登録） | ローカルフォルダ自動同期 |
-| **プレミアム会員** | iPhone等 | サブスク | クラウド保存（データ永続化） |
-
-### プラン詳細
-
-#### フリープラン（会員登録なし）
-- PWAとして利用可能
-- データはブラウザのIndexedDBに保存
-- 手動でJSONエクスポート/インポート可能
-- ⚠️ ブラウザキャッシュクリアでデータ消失の可能性
-
-#### 無料会員（要会員登録）
-- **対象**: Android / PC（Chrome/Edge）ユーザー
-- File System Access APIでローカルフォルダに自動保存
-- データの永続性を確保
-- 会員登録によりサポート・お知らせ受信可能
-
-#### プレミアム会員（サブスクリプション）
-- **対象**: iPhone / File System Access API非対応ブラウザユーザー
-- クラウドストレージにデータを保存
-- 複数デバイス間での同期
-- データの完全な永続性を保証
-
----
-
-## 🔮 今後の機能追加予定
-
-- [x] データのエクスポート/インポート機能
-- [ ] 会員登録・認証機能
-- [ ] クラウド保存機能（Supabase）
-- [ ] カテゴリ分類機能
-- [ ] 検索・フィルタリング機能
-- [ ] カロリー記録機能
-- [ ] 統計・グラフ表示
+| ファイル | 変更種別 | 内容 |
+|---------|---------|------|
+| `src/lib/imageUtils.ts` | 新規 | `compressImage` を `db.ts` から分離 |
+| `src/lib/storageManager.ts` | 新規 | ストレージ管理機能を追加 |
+| `src/lib/db.ts` | 変更 | `compressImage` を削除 |
+| `src/app/add/page.tsx` | 変更 | `compressImage` のimport元を `imageUtils` に変更 |
+| `src/app/edit/[id]/page.tsx` | 変更 | 同上 |
+| `src/app/settings/page.tsx` | 変更 | ストレージUI・iPhone対応メッセージ・写真クリーンアップ機能追加 |
+| `src/lib/__tests__/imageUtils.test.ts` | 新規 | 画像圧縮ユニットテスト |
+| `src/lib/__tests__/storageManager.test.ts` | 新規 | ストレージ管理ユニットテスト |
+| `tsconfig.json` | 変更 | テストファイルをコンパイル除外に追加 |

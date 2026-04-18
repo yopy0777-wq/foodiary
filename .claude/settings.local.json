@@ -7,7 +7,18 @@
       "Bash(npm install:*)",
       "Bash(npm run dev:*)",
       "Bash(timeout:*)",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "Bash(\"C:\\\\Tools\\\\foodiary\\\\README.md\":*)",
+      "Bash(ls:*)",
+      "mcp__3737f3f3-f38b-4d6e-8531-78743cff2747__list_projects",
+      "mcp__3737f3f3-f38b-4d6e-8531-78743cff2747__list_tables",
+      "mcp__3737f3f3-f38b-4d6e-8531-78743cff2747__execute_sql",
+      "Bash(grep -E \"\\\\.\\(ts|tsx|js|jsx\\)$\")",
+      "Bash(xargs grep *)",
+      "mcp__3737f3f3-f38b-4d6e-8531-78743cff2747__get_logs",
+      "Bash(node -e \"const {processLock} = require\\('./node_modules/@supabase/auth-js/dist/module/lib/locks.js'\\); console.log\\(typeof processLock\\);\")",
+      "Bash(node -e \"const m = require\\('./node_modules/@supabase/auth-js/dist/main/lib/locks.js'\\); console.log\\(typeof m.processLock\\);\")",
+      "Bash(find /c/Tools/foodiary/src -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" \\\\\\) -exec grep -l \"innerHTML\\\\|dangerouslySetInnerHTML\\\\|eval\\\\|Function\\\\|exec\\\\|<script\" {} \\\\;)"
     ]
   }
 }

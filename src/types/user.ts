@@ -19,10 +19,11 @@ export type PlanType = 'free' | 'member' | 'premium';
  * データベースの profiles テーブルに対応
  */
 export interface UserProfile {
-  id: string;           // ユーザーID（Supabase Auth の user.id と同じ）
-  plan: PlanType;       // 会員プラン
-  created_at: string;   // 作成日時（ISO 8601形式）
-  updated_at: string;   // 更新日時（ISO 8601形式）
+  id: string;            // ユーザーID（Supabase Auth の user.id と同じ）
+  plan: PlanType;        // 会員プラン
+  created_at: string;    // 作成日時（ISO 8601形式）
+  updated_at: string;    // 更新日時（ISO 8601形式）
+  last_active?: string;  // 最終アクティブ日時（Supabase 無料プラン停止防止用）
 }
 
 /**

@@ -79,20 +79,20 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-green-50 to-white pb-20">
+    <main className="min-h-screen bg-[#F9F8F5] pb-24">
       <div className="max-w-2xl mx-auto px-4 py-6">
         {/* ヘッダー部分 */}
         <header className="mb-8 flex items-start justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">🍽️ 食事記録</h1>
-            <p className="text-gray-600">食べたものを記録しよう</p>
+            <h1 className="text-2xl font-bold text-stone-900 tracking-tight">食事記録</h1>
+            <p className="text-stone-500 text-sm mt-0.5">食べたものを記録しよう</p>
           </div>
           {/* 右側のアクションボタン */}
           <div className="flex items-center gap-2">
             {/* 設定ページへのリンク */}
             <Link
               href="/settings"
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition"
+              className="p-2 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded-lg transition"
               title="設定"
             >
               {/* 歯車アイコン */}
@@ -120,15 +120,19 @@ export default function Home() {
         {loading ? (
           /* 読み込み中の表示 */
           <div className="text-center py-20">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
-            <p className="mt-4 text-gray-600">読み込み中...</p>
+            <div className="inline-block animate-spin rounded-full h-10 w-10 border-2 border-stone-200 border-t-orange-500"></div>
+            <p className="mt-4 text-stone-500 text-sm">読み込み中...</p>
           </div>
         ) : entries.length === 0 ? (
           /* エントリーがない場合の表示 */
-          <div className="text-center py-20">
-            <p className="text-6xl mb-4">📝</p>
-            <p className="text-gray-600 mb-2">まだ記録がありません</p>
-            <p className="text-sm text-gray-500">右下のボタンから記録を追加しましょう</p>
+          <div className="text-center py-24">
+            <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-stone-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            </div>
+            <p className="text-stone-700 font-medium mb-1">まだ記録がありません</p>
+            <p className="text-sm text-stone-400">右下のボタンから記録を追加しましょう</p>
           </div>
         ) : (
           /* エントリー一覧の表示 */

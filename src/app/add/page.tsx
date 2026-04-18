@@ -112,52 +112,52 @@ export default function AddPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-green-50 to-white">
+    <main className="min-h-screen bg-[#F9F8F5]">
       <div className="max-w-2xl mx-auto px-4 py-6">
         {/* ヘッダー部分 */}
         <header className="mb-8 flex items-center">
           {/* 戻るボタン */}
           <Link
             href="/"
-            className="mr-4 text-gray-600 hover:text-gray-800 transition"
+            className="mr-4 text-stone-400 hover:text-stone-800 transition"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </Link>
-          <h1 className="text-3xl font-bold text-gray-800">新しい記録</h1>
+          <h1 className="text-xl font-bold text-stone-900">新しい記録</h1>
         </header>
 
         {/* 入力フォーム */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="bg-white rounded-2xl shadow-lg p-6 space-y-6">
+          <div className="bg-white rounded-2xl shadow-sm ring-1 ring-black/[0.06] p-6 space-y-5">
             {/* 日付と時間の入力フィールド */}
             <div className="flex gap-4">
               {/* 日付入力 */}
               <div className="flex-1">
-                <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
-                  📅 日付
+                <label htmlFor="date" className="block text-sm font-medium text-stone-600 mb-1.5">
+                  日付
                 </label>
                 <input
                   type="date"
                   id="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-stone-200 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent bg-white text-stone-900 placeholder-stone-300"
                   required
                 />
               </div>
               {/* 時間入力 */}
               <div className="flex-1">
-                <label htmlFor="time" className="block text-sm font-medium text-gray-700 mb-2">
-                  🕐 時間
+                <label htmlFor="time" className="block text-sm font-medium text-stone-600 mb-1.5">
+                  時間
                 </label>
                 <input
                   type="time"
                   id="time"
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-stone-200 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent bg-white text-stone-900 placeholder-stone-300"
                   required
                 />
               </div>
@@ -165,8 +165,8 @@ export default function AddPage() {
 
             {/* 食事種別の選択 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                🍽️ 食事種別
+              <label className="block text-sm font-medium text-stone-600 mb-1.5">
+                食事種別
               </label>
               {/* タグ形式の選択ボタン */}
               <div className="flex flex-wrap gap-2">
@@ -175,10 +175,10 @@ export default function AddPage() {
                     key={type}
                     type="button"
                     onClick={() => setMealType(type)}
-                    className={`px-4 py-2 rounded-full font-medium transition ${
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${
                       mealType === type
-                        ? 'bg-green-500 text-white'           // 選択中のスタイル
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'  // 未選択のスタイル
+                        ? 'bg-stone-900 text-white'
+                        : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
                     }`}
                   >
                     {type}
@@ -189,23 +189,24 @@ export default function AddPage() {
 
             {/* 献立の入力 */}
             <div>
-              <label htmlFor="menu" className="block text-sm font-medium text-gray-700 mb-2">
-                📝 献立（任意）
+              <label htmlFor="menu" className="block text-sm font-medium text-stone-600 mb-1.5">
+                献立（任意）
               </label>
               <input
                 type="text"
                 id="menu"
                 value={menu}
                 onChange={(e) => setMenu(e.target.value)}
+                maxLength={200}
                 placeholder="例: ハンバーグ、サラダ、味噌汁"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-stone-200 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-transparent bg-white text-stone-900 placeholder-stone-300"
               />
             </div>
 
             {/* 写真の入力 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                📷 写真（任意）
+              <label className="block text-sm font-medium text-stone-600 mb-1.5">
+                写真（任意）
               </label>
               <CameraInput onChange={handlePhotoChange} preview={photoPreview} />
             </div>
@@ -215,9 +216,9 @@ export default function AddPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition transform hover:scale-105 active:scale-95 disabled:transform-none"
+            className="w-full bg-orange-500 hover:bg-orange-600 active:bg-orange-700 disabled:bg-stone-300 text-white font-semibold py-4 px-6 rounded-xl transition disabled:cursor-not-allowed"
           >
-            {loading ? '保存中...' : '💾 保存する'}
+            {loading ? '保存中...' : '保存する'}
           </button>
         </form>
       </div>

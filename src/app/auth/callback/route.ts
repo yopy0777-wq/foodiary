@@ -34,6 +34,9 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/?error=not_configured`);
   }
 
+  // `next` パラメータを内部パスのみに制限（Open Redirect 対策）
+  const safeNext = /^\/[^/]/.test(next) ? next : '/';
+
   // 認証コードがある場合、セッションに交換
   if (code) {
     // Cookie ストアを取得
@@ -67,7 +70,7 @@ export async function GET(request: Request) {
 
     // 成功した場合は指定されたページにリダイレクト
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
+      return NextResponse.redirect(`${origin}${safeNext}`);
     }
   }
 

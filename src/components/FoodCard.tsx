@@ -56,7 +56,7 @@ export default function FoodCard({ entry, onDelete }: FoodCardProps) {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+    <div className="bg-white rounded-2xl overflow-hidden shadow-sm ring-1 ring-black/[0.06] hover:shadow-md transition-shadow">
       {/* 写真がある場合は表示 */}
       {photoURL && (
         <div className="w-full h-64 bg-gray-100">
@@ -74,19 +74,19 @@ export default function FoodCard({ entry, onDelete }: FoodCardProps) {
         <div className="flex justify-between items-start mb-2">
           <div>
             {/* 食事タイプのラベル（朝食、昼食など） */}
-            <span className="inline-block bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded-full mb-2">
+            <span className="inline-block bg-stone-100 text-stone-600 text-xs font-medium px-3 py-1 rounded-full mb-2 tracking-wide">
               {entry.mealType}
             </span>
             {/* メニュー名（入力されている場合のみ表示） */}
             {entry.menu && (
-              <h2 className="text-xl font-bold text-gray-800">{entry.menu}</h2>
+              <h2 className="text-lg font-semibold text-stone-900 leading-snug">{entry.menu}</h2>
             )}
           </div>
           <div className="flex gap-1">
             {/* 編集ボタン */}
             <button
               onClick={() => router.push(`/edit/${entry.id}`)}
-              className="text-gray-500 hover:text-green-600 transition p-2 hover:bg-green-50 rounded-lg"
+              className="text-stone-400 hover:text-stone-700 transition p-2 hover:bg-stone-100 rounded-lg"
               title="編集"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -96,7 +96,7 @@ export default function FoodCard({ entry, onDelete }: FoodCardProps) {
             {/* 削除ボタン */}
             <button
               onClick={() => onDelete(entry.id)}
-              className="text-red-500 hover:text-red-700 transition p-2 hover:bg-red-50 rounded-lg"
+              className="text-stone-400 hover:text-red-600 transition p-2 hover:bg-red-50 rounded-lg"
               title="削除"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -107,7 +107,7 @@ export default function FoodCard({ entry, onDelete }: FoodCardProps) {
         </div>
 
         {/* フッター部分：日付と時間 */}
-        <p className="text-gray-600 flex items-center">
+        <p className="text-stone-400 flex items-center text-sm mt-1">
           {/* カレンダーアイコン */}
           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />

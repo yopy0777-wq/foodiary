@@ -9,6 +9,7 @@
 import { useState, useEffect, useRef } from 'react';
 // Next.js の Link コンポーネントをインポート
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 // データベース操作関数をインポート
 import { getAllEntries, importEntries, clearAllEntries } from '@/lib/db';
 // ファイルストレージ関連の関数をインポート
@@ -31,9 +32,9 @@ import { getStorageUsage, formatBytes, cleanupOldPhotos, isIOS, StorageUsage } f
  * プランタイプごとのスタイル定義
  */
 const planColors = {
-  free: 'bg-gray-100 text-gray-600 border-gray-200',
-  member: 'bg-green-100 text-green-600 border-green-200',
-  premium: 'bg-yellow-100 text-yellow-600 border-yellow-200',
+  free: 'bg-stone-100 text-stone-600 border-stone-200',
+  member: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+  premium: 'bg-amber-100 text-amber-700 border-amber-200',
 };
 
 /**
@@ -42,6 +43,7 @@ const planColors = {
 export default function SettingsPage() {
   // 認証コンテキストから必要な値と関数を取得
   const { user, plan, isAuthenticated, signOut } = useAuth();
+  const router = useRouter();
   // File System Access API のサポート状態
   const [isSupported, setIsSupported] = useState(false);
   // 保存フォルダが設定されているか
@@ -242,34 +244,34 @@ export default function SettingsPage() {
   const handleSignOut = async () => {
     if (confirm('ログアウトしますか？')) {
       await signOut();
-      showMessage('success', 'ログアウトしました');
+      router.push('/auth/login');
     }
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-green-50 to-white">
+    <main className="min-h-screen bg-[#F9F8F5]">
       <div className="max-w-2xl mx-auto px-4 py-6">
         {/* ヘッダー部分 */}
         <header className="mb-8 flex items-center">
           {/* 戻るボタン */}
           <Link
             href="/"
-            className="mr-4 text-gray-600 hover:text-gray-800 transition"
+            className="mr-4 text-stone-400 hover:text-stone-800 transition"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </Link>
-          <h1 className="text-3xl font-bold text-gray-800">設定</h1>
+          <h1 className="text-xl font-bold text-stone-900">設定</h1>
         </header>
 
         {/* 通知メッセージ */}
         {message && (
           <div
-            className={`mb-6 p-4 rounded-lg ${
+            className={`mb-6 p-4 rounded-xl text-sm border ${
               message.type === 'success'
-                ? 'bg-green-100 text-green-800'
-                : 'bg-red-100 text-red-800'
+                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                : 'bg-red-50 text-red-800 border-red-200'
             }`}
           >
             {message.text}
@@ -278,8 +280,8 @@ export default function SettingsPage() {
 
         <div className="space-y-6">
           {/* アカウントセクション */}
-          <section className="bg-white rounded-2xl shadow-lg p-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">アカウント</h2>
+          <section className="bg-white rounded-2xl shadow-sm ring-1 ring-black/[0.06] p-6">
+            <h2 className="text-base font-semibold text-stone-900 mb-4">アカウント</h2>
 
             {isAuthenticated ? (
               /* ログイン済みの場合 */
@@ -301,7 +303,7 @@ export default function SettingsPage() {
                 {plan !== 'premium' && (
                   <Link
                     href="/premium"
-                    className="inline-block px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition text-sm"
+                    className="inline-block px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition text-sm font-medium"
                   >
                     プレミアムにアップグレード
                   </Link>
@@ -311,7 +313,7 @@ export default function SettingsPage() {
                 <div className="pt-4 border-t">
                   <button
                     onClick={handleSignOut}
-                    className="text-red-600 hover:text-red-700 text-sm"
+                    className="text-stone-400 hover:text-red-600 text-sm transition"
                   >
                     ログアウト
                   </button>
@@ -333,13 +335,13 @@ export default function SettingsPage() {
                 <div className="flex gap-2">
                   <Link
                     href="/auth/login"
-                    className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition text-sm"
+                    className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition text-sm font-medium"
                   >
                     ログイン
                   </Link>
                   <Link
                     href="/auth/signup"
-                    className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition text-sm"
+                    className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg transition text-sm font-medium"
                   >
                     新規登録
                   </Link>
@@ -349,8 +351,8 @@ export default function SettingsPage() {
           </section>
 
           {/* 自動保存設定セクション */}
-          <section className="bg-white rounded-2xl shadow-lg p-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">自動保存</h2>
+          <section className="bg-white rounded-2xl shadow-sm ring-1 ring-black/[0.06] p-6">
+            <h2 className="text-base font-semibold text-stone-900 mb-4">自動保存</h2>
 
             {loading ? (
               /* 読み込み中 */
@@ -367,7 +369,7 @@ export default function SettingsPage() {
                 {!isAuthenticated && (
                   <Link
                     href="/auth/signup"
-                    className="inline-block mt-3 text-green-600 hover:underline text-sm"
+                    className="inline-block mt-3 text-orange-600 hover:underline text-sm"
                   >
                     会員登録して機能を解放
                   </Link>
@@ -409,14 +411,14 @@ export default function SettingsPage() {
                   <button
                     onClick={handleSyncFromFile}
                     disabled={syncing}
-                    className="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-lg transition"
+                    className="px-4 py-2 bg-stone-700 hover:bg-stone-800 disabled:bg-stone-300 text-white rounded-lg transition text-sm font-medium"
                   >
                     {syncing ? '読み込み中...' : 'ファイルから読み込む'}
                   </button>
                   {/* 設定解除ボタン */}
                   <button
                     onClick={handleClearDirectory}
-                    className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition"
+                    className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg transition text-sm font-medium"
                   >
                     設定を解除
                   </button>
@@ -431,7 +433,7 @@ export default function SettingsPage() {
                 </p>
                 <button
                   onClick={handleSelectDirectory}
-                  className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition"
+                  className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition text-sm font-medium"
                 >
                   保存フォルダを選択
                 </button>
@@ -441,8 +443,8 @@ export default function SettingsPage() {
 
           {/* ストレージ使用量セクション（未ログイン時のみ） */}
           {!isAuthenticated && storageUsage && (
-            <section className="bg-white rounded-2xl shadow-lg p-6">
-              <h2 className="text-xl font-bold text-gray-800 mb-4">ストレージ使用量</h2>
+            <section className="bg-white rounded-2xl shadow-sm ring-1 ring-black/[0.06] p-6">
+              <h2 className="text-base font-semibold text-stone-900 mb-4">ストレージ使用量</h2>
               <p className="text-sm text-gray-600 mb-4">
                 ブラウザのストレージ（IndexedDB）の使用状況です。写真データが多いと容量を圧迫します。
               </p>
@@ -472,7 +474,7 @@ export default function SettingsPage() {
               <button
                 onClick={handleCleanupPhotos}
                 disabled={cleaningPhotos}
-                className="mt-4 px-4 py-2 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 text-white rounded-lg transition text-sm"
+                className="mt-4 px-4 py-2 bg-orange-500 hover:bg-orange-600 disabled:bg-stone-300 text-white rounded-lg transition text-sm font-medium"
               >
                 {cleaningPhotos ? '削除中...' : '古い写真を削除してストレージ解放'}
               </button>
@@ -480,8 +482,8 @@ export default function SettingsPage() {
           )}
 
           {/* 手動バックアップセクション */}
-          <section className="bg-white rounded-2xl shadow-lg p-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">手動バックアップ</h2>
+          <section className="bg-white rounded-2xl shadow-sm ring-1 ring-black/[0.06] p-6">
+            <h2 className="text-base font-semibold text-stone-900 mb-4">手動バックアップ</h2>
             <p className="text-gray-600 mb-4">
               全ブラウザ対応。JSONファイルとしてデータをダウンロード・復元できます。
             </p>
@@ -489,14 +491,14 @@ export default function SettingsPage() {
               {/* エクスポートボタン */}
               <button
                 onClick={handleExport}
-                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition"
+                className="px-4 py-2 bg-stone-800 hover:bg-stone-900 text-white rounded-lg transition text-sm font-medium"
               >
                 データをエクスポート
               </button>
               {/* インポートボタン */}
               <button
                 onClick={handleImportClick}
-                className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition"
+                className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg transition text-sm font-medium"
               >
                 データをインポート
               </button>

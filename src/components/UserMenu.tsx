@@ -4,6 +4,7 @@
 import { useState } from 'react';
 // Next.js の Link コンポーネントをインポート
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 // 認証コンテキストからカスタムフックをインポート
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -20,9 +21,9 @@ const planLabels = {
  * プランタイプごとの背景色とテキスト色のスタイル
  */
 const planColors = {
-  free: 'bg-gray-100 text-gray-600',
-  member: 'bg-green-100 text-green-600',
-  premium: 'bg-yellow-100 text-yellow-600',
+  free: 'bg-stone-100 text-stone-600',
+  member: 'bg-emerald-100 text-emerald-700',
+  premium: 'bg-amber-100 text-amber-700',
 };
 
 /**
@@ -33,6 +34,7 @@ const planColors = {
 export default function UserMenu() {
   // 認証コンテキストから必要な値と関数を取得
   const { user, plan, loading, signOut, isAuthenticated } = useAuth();
+  const router = useRouter();
   // ドロップダウンメニューの開閉状態
   const [isOpen, setIsOpen] = useState(false);
 
@@ -48,7 +50,7 @@ export default function UserMenu() {
     return (
       <Link
         href="/auth/login"
-        className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-lg transition"
+        className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition"
       >
         ログイン
       </Link>
@@ -64,7 +66,7 @@ export default function UserMenu() {
         className="flex items-center space-x-2 focus:outline-none"
       >
         {/* メールアドレスの頭文字を表示するアバター */}
-        <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white font-medium">
+        <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white text-sm font-semibold">
           {user?.email?.charAt(0).toUpperCase()}
         </div>
       </button>
@@ -78,7 +80,7 @@ export default function UserMenu() {
             onClick={() => setIsOpen(false)}
           />
           {/* メニュー本体 */}
-          <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg z-50 overflow-hidden">
+          <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg ring-1 ring-black/[0.06] z-50 overflow-hidden">
             {/* ユーザー情報セクション */}
             <div className="p-4 border-b">
               {/* メールアドレス */}
@@ -111,9 +113,10 @@ export default function UserMenu() {
               )}
               {/* ログアウトボタン */}
               <button
-                onClick={() => {
-                  signOut();
+                onClick={async () => {
+                  await signOut();
                   setIsOpen(false);
+                  router.push('/auth/login');
                 }}
                 className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition"
               >

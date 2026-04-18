@@ -27,7 +27,7 @@ export const viewport: Viewport = {
   initialScale: 1,            // 初期ズーム倍率
   maximumScale: 1,            // 最大ズーム倍率（ピンチズーム無効）
   userScalable: false,        // ユーザーによるズーム操作を無効
-  themeColor: '#10b981',      // テーマカラー（ブラウザのアドレスバー色など）
+  themeColor: '#f97316',      // テーマカラー（ブラウザのアドレスバー色など）
 }
 
 /**
@@ -39,9 +39,12 @@ export const metadata: Metadata = {
   description: '食べたものを写真とメモで記録',  // ページの説明
   manifest: '/manifest.json',           // PWA マニフェストへのパス
   appleWebApp: {
-    capable: true,                      // iOS でホーム画面に追加可能
+    capable: true,                      // iOS でホーム画面に追加可能（後方互換のため残す）
     statusBarStyle: 'default',          // iOS ステータスバーのスタイル
     title: '食事記録',                  // iOS ホーム画面でのタイトル
+  },
+  other: {
+    'mobile-web-app-capable': 'yes',    // apple-mobile-web-app-capable の標準版
   },
 }
 

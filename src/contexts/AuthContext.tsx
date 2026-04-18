@@ -86,23 +86,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
      * 既存のセッションがあれば、ユーザー情報とプロフィールを取得
      */
     const initAuth = async () => {
-      // 現在のセッション情報を取得
-      const { data: { session } } = await supabase.auth.getSession();
+      try {
+        // 現在のセッション情報を取得（オフライン時はトークンリフレッシュが失敗する可能性がある）
+        const { data: { session } } = await supabase.auth.getSession();
 
-      // セッションにユーザーが存在する場合
-      if (session?.user) {
-        // ユーザー情報を状態に設定
-        setUser(session.user);
-        // プロフィール情報を取得して状態に設定
-        const userProfile = await fetchProfile(session.user.id);
-        setProfile(userProfile);
+        if (session?.user) {
+          setUser(session.user);
+          // プロフィール取得もオフライン時に失敗しうるため try-catch
+          try {
+            const userProfile = await fetchProfile(session.user.id);
+            setProfile(userProfile);
+          } catch {
+            // オフライン時はプロフィール取得をスキップ（ユーザーは認証済みとして扱う）
+          }
+          // Supabase 無料プランの7日間非アクティブによる停止を防ぐため、
+          // 起動時にオンラインであれば last_active を更新する（キープアライブ）
+          if (typeof navigator !== 'undefined' && navigator.onLine) {
+            try {
+              await supabase
+                .from('profiles')
+                .update({ last_active: new Date().toISOString() })
+                .eq('id', session.user.id);
+            } catch {
+              // キープアライブ失敗はサイレントに無視
+            }
+          }
+        }
+      } catch (err) {
+        // ページ遷移等でコンポーネントがアンマウントされた際の AbortError は無視する
+        if (err instanceof Error && err.name === 'AbortError') {
+          return;
+        }
+        // ERR_INTERNET_DISCONNECTED など、オフライン起因のネットワークエラーは静かに無視する
+        const isNetworkError = err instanceof TypeError && err.message === 'Failed to fetch';
+        if (!isNetworkError) {
+          console.error('認証初期化エラー:', err);
+        }
+      } finally {
+        setLoading(false);
       }
-
-      // 読み込み完了
-      setLoading(false);
     };
 
-    // 認証初期化を実行
     initAuth();
 
     /**
@@ -111,13 +135,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
      */
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, session: Session | null) => {
-        // セッションにユーザーが存在する場合（ログイン時など）
         if (session?.user) {
           setUser(session.user);
-          const userProfile = await fetchProfile(session.user.id);
-          setProfile(userProfile);
+          try {
+            const userProfile = await fetchProfile(session.user.id);
+            setProfile(userProfile);
+          } catch {
+            // オフライン時はプロフィール取得をスキップ
+          }
         } else {
-          // ユーザーが存在しない場合（ログアウト時など）
           setUser(null);
           setProfile(null);
         }
@@ -178,11 +204,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * Supabase からログアウトし、ローカルの状態をクリア
    */
   const signOut = async () => {
-    // Supabase が設定されていない場合は何もしない
     if (!supabase) return;
-    // Supabase からログアウト
-    await supabase.auth.signOut();
-    // ローカルの状態をクリア
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // エラーが出ても必ずローカル状態をクリアする
+    }
     setUser(null);
     setProfile(null);
   };
