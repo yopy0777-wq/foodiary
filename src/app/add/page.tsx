@@ -49,6 +49,8 @@ export default function AddPage() {
   const [photoPreview, setPhotoPreview] = useState<string>('');
   // 保存中フラグ
   const [loading, setLoading] = useState(false);
+  // AI分析中フラグ
+  const [analyzing, setAnalyzing] = useState(false);
 
   /**
    * 写真選択時のハンドラー
@@ -77,6 +79,60 @@ export default function AddPage() {
   };
 
   /**
+   * AI でメニューを推測する
+   * 写真をGemini APIに送信してメニューを取得
+   */
+  const handleAnalyzeMenu = async () => {
+    if (!photo) return;
+
+    setAnalyzing(true);
+
+    try {
+      // Blob を Base64 に変換
+      const reader = new FileReader();
+      reader.readAsDataURL(photo);
+
+      reader.onload = async () => {
+        const base64String = reader.result as string;
+        const base64Data = base64String.split(',')[1]; // data:image/...の後の部分
+        const mimeType = photo.type || 'image/jpeg';
+
+        // API に送信
+        const response = await fetch('/api/analyze-food', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            imageBase64: base64Data,
+            mimeType,
+          }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || '分析に失敗しました');
+        }
+
+        const result = await response.json();
+        setMenu(result.menu);
+        setAnalyzing(false);
+      };
+
+      reader.onerror = () => {
+        console.error('画像の読み込みに失敗しました');
+        alert('画像の読み込みに失敗しました');
+        setAnalyzing(false);
+      };
+    } catch (error) {
+      console.error('メニュー推測エラー:', error);
+      const message = error instanceof Error ? error.message : 'メニュー推測に失敗しました';
+      alert(message);
+      setAnalyzing(false);
+    }
+  };
+
+  /**
    * フォーム送信ハンドラー
    * エントリーを作成してデータベースに保存
    */
@@ -93,7 +149,7 @@ export default function AddPage() {
         time,
         mealType,
         menu: menu.trim() || undefined,    // 空文字は undefined に
-        photo: photo || undefined,         // null は undefined に
+        photo: undefined,                  // 写真は保存しない（AIで推測後は破棄）
         createdAt: Date.now(),             // 作成日時
       };
 
@@ -190,9 +246,21 @@ export default function AddPage() {
 
             {/* 献立の入力 */}
             <div>
-              <label htmlFor="menu" className="block text-sm font-medium text-stone-600 mb-1.5">
-                献立（任意）
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label htmlFor="menu" className="block text-sm font-medium text-stone-600">
+                  献立（任意）
+                </label>
+                {photo && (
+                  <button
+                    type="button"
+                    onClick={handleAnalyzeMenu}
+                    disabled={analyzing}
+                    className="text-xs px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-full transition disabled:opacity-50"
+                  >
+                    {analyzing ? '分析中...' : 'AIで推測'}
+                  </button>
+                )}
+              </div>
               <input
                 type="text"
                 id="menu"
